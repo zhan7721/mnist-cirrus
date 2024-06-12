@@ -1,0 +1,2 @@
+training:
+  eval_device: "cpu"

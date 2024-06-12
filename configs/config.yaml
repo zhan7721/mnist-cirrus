@@ -1,0 +1,13 @@
+defaults:
+  - _self_
+  - device: default
+training:
+  lr: 1e-4
+  lr_schedule: "linear_with_warmup"
+  lr_warmup_steps: 100
+  n_steps: 1000
+  train_split: "train[:1%]"
+  val_split: "test[:1%]"
+model:
+  n_layers: 4
+  hidden_dim: 512
