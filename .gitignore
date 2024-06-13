@@ -2,6 +2,9 @@
 # Template specific #
 #####################
 
+*.out
+*.err
+
 checkpoints/
 outputs/
 wandb/

@@ -10,14 +10,13 @@ import matplotlib.pyplot as plt
 from transformers import get_linear_schedule_with_warmup
 import torch
 from torchinfo import summary
-from torchview import draw_graph
 from rich.console import Console
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 import humanhash
 import wandb
+import hydra
 
-from util.remote import wandb_update_config, wandb_init
 from util.plotting import plot_first_batch
 from collators import get_collator
 
@@ -113,7 +112,7 @@ class Trainer(ABC):
         self.training_args = training_args
         self.global_step = 0
 
-        self.print_and_draw_model()
+        self.print_model()
 
         train_ds = load_dataset(training_args.dataset, split=training_args.train_split)
         val_ds = load_dataset(training_args.dataset, split=training_args.val_split)
@@ -149,30 +148,13 @@ class Trainer(ABC):
                 f"{self.training_args.figure_path}/first_batch.png"
             )  # save the plot
 
-        # wandb
-        if accelerator.is_main_process:
-            wandb_name, wandb_project, wandb_path, wandb_mode = (
-                training_args.run_name,
-                training_args.wandb_project,
-                training_args.wandb_path,
-                training_args.wandb_mode,
-            )
-            wandb_init(wandb_name, wandb_project, wandb_path, wandb_mode)
-            wandb.run.log_code()
-            wandb_update_config(
-                {
-                    "training": training_args,
-                    "model": model_args,
-                }
-            )
-
         self.model, self.optimizer, self.train_dl, self.val_dl, self.scheduler = (
             accelerator.prepare(
                 self.model, self.optimizer, self.train_dl, self.val_dl, self.scheduler
             )
         )
 
-    def print_and_draw_model(self):
+    def print_model(self):
         """
         Print and draw the model
         """
@@ -203,18 +185,6 @@ class Trainer(ABC):
             ],
         )
         self.console_print(model_summary)
-        Path(self.training_args.figure_path).mkdir(exist_ok=True)
-        if self.accelerator.is_main_process:
-            _ = draw_graph(
-                self.model,
-                input_data=dummy_input,
-                save_graph=True,
-                directory="figures/",
-                filename="model",
-                expand_nested=True,
-            )
-            # remove "figures/model" file
-            os.remove(f"{self.training_args.figure_path}/model")
 
     def wandb_log(self, prefix, log_dict, round_n=3, print_log=True):
         """
@@ -222,7 +192,6 @@ class Trainer(ABC):
         """
         if self.accelerator.is_main_process:
             log_dict = {f"{prefix}/{k}": v for k, v in log_dict.items()}
-            wandb.log(log_dict, step=self.global_step)
             if print_log and not self.silent:
                 log_dict = {k: round(v, round_n) for k, v in log_dict.items()}
                 self.console.log(log_dict)
@@ -388,15 +357,6 @@ class Trainer(ABC):
         # save final checkpoint
         if self.training_args.do_save:
             self.save_checkpoint("final")
-
-        if (
-            self.accelerator.is_main_process
-            and self.training_args.wandb_mode == "offline"
-        ):
-            self.console_rule("Weights & Biases")
-            self.console_print(
-                f"use \n[magenta]wandb sync {Path(wandb.run.dir).parent}[/magenta]\nto sync offline run"
-            )
 
     @abstractmethod
     def train_step(self, batch, device):
