@@ -15,7 +15,7 @@ export MPLCONFIGDIR="/work/tc062/tc062/${USERNAME}/.cache/matplotlib"
 export WANDB_MODE="offline"
 
 # create a default venv if it doesn't exist
-export DEFAULT_VENV="/work/tc062/tc062/${USERNAME}/.venv/default_venv"
+export DEFAULT_VENV="/work/tc062/tc062/${USERNAME}/.venv/my_venv"
 if [ ! -d "$DEFAULT_VENV" ]; then
     python -m venv --system-site-packages $DEFAULT_VENV
     extend-venv-activate $DEFAULT_VENV

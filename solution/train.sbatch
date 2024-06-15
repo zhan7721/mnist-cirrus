@@ -7,9 +7,9 @@
 #SBATCH --gres=gpu:1
 #SBATCH --time=00:20:00
 #SBATCH --qos=short
-#SBATCH --account=tc062-staff
+#SBATCH --account=tc062-pool3
 
 
-source setup_slurm_env.sh
+source ./solution/setup_slurm_env.sh
 
 srun accelerate launch scripts/train.py
