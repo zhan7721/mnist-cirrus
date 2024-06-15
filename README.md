@@ -8,3 +8,4 @@ It's quite opinionated in the following (and probably more) ways:
 - assumes one is always using a huggingface dataset (this can also be done using ``load_dataset('some_dataset.py')``)
 - uses collators as the main way to process data that hasn't been preprocessed by the dataset
 - uses separate configs for training (everything not shipped with the model), model and collator
+Modified 15 Jun 11:23
